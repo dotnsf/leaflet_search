@@ -14,7 +14,8 @@ var map = null;
 var marker = null;
 
 var lnglats = [];
-var polygon_markers = [];
+var polygon_lines = [];
+var line = null;
 
 $(function(){
   //. 船橋市役所を中心とした地図を OpenStreetMap データで表示
@@ -34,8 +35,13 @@ $(function(){
     var lnglat = [ e.latlng.lng, e.latlng.lat ];
     //console.log( lnglat );
 
-    var marker = L.marker( [ lnglat[1], lnglat[0] ], { title: '' + polygon_markers.length } ).addTo( map );
-    polygon_markers.push( marker );
+    if( line ){
+      map.removeLayer( line );
+    }
+    var latlng = [ lnglat[1], lnglat[0] ];
+    polygon_lines.push( latlng );
+    line = L.polyline( polygon_lines, { color: '#0000ff', weight: 3, opacity: 0.6 } ).addTo( map );
+
     lnglats.push( lnglat.join( ' ' ) )
   });
 });
@@ -73,17 +79,23 @@ function getPrefs(){
 }
 
 function reset(){
-  if( polygon_markers.length ){
-    polygon_markers.forEach( function( marker ){
-      map.removeLayer( marker );
-    });
-    polygon_markers = [];
+  if( polygon_lines.length ){
+    map.removeLayer( line );
+
+    polygon_lines = [];
     lnglats = [];
+    line = null;
   }
 }
 
 function geosearch(){
   if( lnglats.length >= 3 ){
+    if( line ){
+      map.removeLayer( line );
+    }
+    polygon_lines.push( polygon_lines[0] );
+    line = L.polyline( polygon_lines, { color: '#0000ff', weight: 3, opacity: 0.6 } ).addTo( map );
+
     lnglats.push( lnglats[0] );
     //console.log( lnglats );
     var polygon = '((' + lnglats.join( ',' ) + '))';
@@ -93,12 +105,15 @@ function geosearch(){
       url: '/polygonsearch?polygon=' + polygon,
       success: function( result ){
         if( result.status ){
-          console.log( result.prefs ); //. [ { id: 'xx', doc: { _id: 'xx', code: 19, .. }, geometry: {} }, .. ]
+          //console.log( result.prefs ); //. [ { id: 'xx', doc: { _id: 'xx', code: 19, .. }, geometry: {} }, .. ]
+          var text = '';
           result.prefs.forEach( function( result_pref ){
             var result_id = result_pref.id;
             var result_prefecture = result_pref.doc.prefecture;
             var result_capital = result_pref.doc.capital;
+            text += result_prefecture + ': ' + result_capital + "\n";
 
+            /*
             pref_markers.forEach( function( pref_marker ){
               if( pref_marker.options.id == result_id ){
                 //console.log( result_pref );
@@ -106,7 +121,9 @@ function geosearch(){
                 //pref_marker.openPopup();
               }
             });
+            */
           });
+          alert( text );
         }
         reset();
       },

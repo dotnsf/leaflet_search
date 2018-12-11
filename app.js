@@ -1,16 +1,10 @@
 //. app.js
 
 var express = require( 'express' ),
-    basicAuth = require( 'basic-auth-connect' ),
-    cors = require( 'cors' ),
     cfenv = require( 'cfenv' ),
-    easyimg = require( 'easyimage' ),
-    multer = require( 'multer' ),
     bodyParser = require( 'body-parser' ),
     fs = require( 'fs' ),
-    ejs = require( 'ejs' ),
     cloudantlib = require( '@cloudant/cloudant' ),
-    uuidv1 = require( 'uuid/v1' ),
     app = express();
 var settings = require( './settings' );
 
@@ -43,14 +37,6 @@ app.use( bodyParser.json() );
 app.use( express.Router() );
 app.use( express.static( __dirname + '/public' ) );
 
-//app.set( 'views', __dirname + '/public' );
-//app.set( 'view engine', 'ejs' );
-
-/*
-app.get( '/', function( req, res ){
-  res.render( 'index', { base_url: settings.base_url } );
-});
-*/
 
 app.get( '/prefs', function( req, res ){
   res.contentType( 'application/json; charset=utf-8' );
@@ -84,24 +70,22 @@ app.get( '/polygonsearch', function( req, res ){
 
   if( db ){
     var polygon = req.query.polygon;  //. polygon = '((140.12333 35.60472,138.18111 36.65139,138.38306 34.97694,140.12333 35.60472))'
-    //var polygon = '((140.12333 35.60472,138.18111 36.65139,138.38306 34.97694,140.12333 35.60472))'
-
     //polygon = polygon.split( ' ' ).join( '%20' );  //. 不要
 
     var query = {
       include_docs: true,
       g: 'polygon' + polygon
     };
-    console.log( query );
+    //console.log( query );
 
     db.geo( 'geodd', 'geoidx', query, function( err, result ){
       if( err ){
-        console.log( err );
+        //console.log( err );
         res.status( 400 );
         res.write( JSON.stringify( { status: false, error: err }, 2, null ) );
         res.end();
       }else{
-        console.log( result.rows );
+        //console.log( result.rows );
         res.write( JSON.stringify( { status: true, prefs: result.rows }, 2, null ) );
         res.end();
       }
